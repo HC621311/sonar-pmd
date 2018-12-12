@@ -29,39 +29,42 @@ import java.nio.charset.StandardCharsets;
 import org.sonar.api.server.rule.RulesDefinition;
 
 /**
- * Reads the corresponding classpath resource to add HTML descriptions to a given rule.
- * Taken from <code>sslr-squid-bridge:org.sonar.squidbridge.rules.ExternalDescriptionLoader</code>.
+ * Reads the corresponding classpath resource to add HTML descriptions to a given rule. Taken from
+ * <code>sslr-squid-bridge:org.sonar.squidbridge.rules.ExternalDescriptionLoader</code>.
  */
 public class ExternalDescriptionLoader {
 
-    private final String resourceBasePath;
+	private final String resourceBasePath;
 
-    public ExternalDescriptionLoader(String resourceBasePath) {
-        this.resourceBasePath = resourceBasePath;
-    }
+	public ExternalDescriptionLoader( String resourceBasePath ) {
+		this.resourceBasePath = resourceBasePath;
+	}
 
-    public static void loadHtmlDescriptions(RulesDefinition.NewRepository repository, String languageKey) {
-        ExternalDescriptionLoader loader = new ExternalDescriptionLoader(languageKey);
-        for (RulesDefinition.NewRule newRule : repository.rules()) {
-            loader.addHtmlDescription(newRule);
-        }
-    }
+	public static void loadHtmlDescriptions( RulesDefinition.NewRepository repository, String languageKey ) {
+		ExternalDescriptionLoader loader = new ExternalDescriptionLoader( languageKey );
+		for ( RulesDefinition.NewRule newRule : repository.rules() ) {
+			loader.addHtmlDescription( newRule );
+		}
+	}
 
-    public void addHtmlDescription(RulesDefinition.NewRule rule) {
-        URL resource = ExternalDescriptionLoader.class.getResource(resourceBasePath + "/" + rule.key() + ".html");
-        if (resource != null) {
-            addHtmlDescription(rule, resource);
-        }
-    }
+	public void addHtmlDescription( RulesDefinition.NewRule rule ) {
+		URL resource = ExternalDescriptionLoader.class.getResource( resourceBasePath + "/" + rule.key() + ".html" );
+		if ( resource != null ) {
+			addHtmlDescription( rule, resource );
+		}
+	}
 
-    void addHtmlDescription(RulesDefinition.NewRule rule, URL resource) {
-        final StringBuilder builder = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.openStream(), StandardCharsets.UTF_8))) {
-            reader.lines().forEach(builder::append);
-            rule.setHtmlDescription(builder.toString());
-        } catch (IOException e) {
-            throw new IllegalStateException("Failed to read: " + resource, e);
-        }
-    }
+	void addHtmlDescription( RulesDefinition.NewRule rule, URL resource ) {
+		final StringBuilder builder = new StringBuilder();
+		try (BufferedReader reader = new BufferedReader( new InputStreamReader( resource.openStream(), StandardCharsets.UTF_8 ) )) {
+//			reader.lines().forEach( builder::append );
+			reader.lines().forEach( content -> {
+				builder.append( content ).append( "\n" );
+			} );
+			rule.setHtmlDescription( builder.toString() );
+		} catch ( IOException e ) {
+			throw new IllegalStateException( "Failed to read: " + resource, e );
+		}
+	}
 
 }
