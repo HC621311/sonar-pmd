@@ -45,120 +45,125 @@ import java.util.List;
 @ScannerSide
 public class PmdExecutor {
 
-	private static final Logger LOGGER = Loggers.get( PmdExecutor.class );
+    private static final Logger LOGGER = Loggers.get(PmdExecutor.class);
 
-	private final FileSystem fs;
-	private final RulesProfile rulesProfile;
-	private final PmdProfileExporter pmdProfileExporter;
-	private final PmdConfiguration pmdConfiguration;
-	private final JavaResourceLocator javaResourceLocator;
-	private final Configuration settings;
+    private final FileSystem fs;
+    private final RulesProfile rulesProfile;
+    private final PmdProfileExporter pmdProfileExporter;
+    private final PmdConfiguration pmdConfiguration;
+    private final JavaResourceLocator javaResourceLocator;
+    private final Configuration settings;
 
-	public PmdExecutor( FileSystem fileSystem, RulesProfile rulesProfile, PmdProfileExporter pmdProfileExporter,
-			PmdConfiguration pmdConfiguration, JavaResourceLocator javaResourceLocator, Configuration settings ) {
-		this.fs = fileSystem;
-		this.rulesProfile = rulesProfile;
-		this.pmdProfileExporter = pmdProfileExporter;
-		this.pmdConfiguration = pmdConfiguration;
-		this.javaResourceLocator = javaResourceLocator;
-		this.settings = settings;
-	}
+    public PmdExecutor(FileSystem fileSystem, RulesProfile rulesProfile, PmdProfileExporter pmdProfileExporter,
+                       PmdConfiguration pmdConfiguration, JavaResourceLocator javaResourceLocator, Configuration settings) {
+        this.fs = fileSystem;
+        this.rulesProfile = rulesProfile;
+        this.pmdProfileExporter = pmdProfileExporter;
+        this.pmdConfiguration = pmdConfiguration;
+        this.javaResourceLocator = javaResourceLocator;
+        this.settings = settings;
+    }
 
-	public Report execute() {
-		final Profiler profiler = Profiler.create( LOGGER ).startInfo( "Execute PMD " + PmdVersion.getVersion() );
-		final ClassLoader initialClassLoader = Thread.currentThread().getContextClassLoader();
+    public Report execute() {
+        final Profiler profiler = Profiler.create(LOGGER).startInfo("Execute PMD 5.5.4");
+        final ClassLoader initialClassLoader = Thread.currentThread().getContextClassLoader();
 
-		try (URLClassLoader classLoader = createClassloader()) {
-			Thread.currentThread().setContextClassLoader( getClass().getClassLoader() );
+        try (URLClassLoader classLoader = createClassloader()) {
+            Thread.currentThread().setContextClassLoader(getClass().getClassLoader());
 
-			return executePmd( classLoader );
-		} catch ( IOException e ) {
-			LOGGER.error( "Failed to close URLClassLoader.", e );
-		} finally {
-			Thread.currentThread().setContextClassLoader( initialClassLoader );
-			profiler.stopInfo();
-		}
+            return executePmd(classLoader);
+        } catch (IOException e) {
+            LOGGER.error("Failed to close URLClassLoader.", e);
+        } finally {
+            Thread.currentThread().setContextClassLoader(initialClassLoader);
+            profiler.stopInfo();
+        }
 
-		return null;
-	}
+        return null;
+    }
 
-	private Report executePmd( URLClassLoader classLoader ) {
-		Report report = new Report();
+    private Report executePmd(URLClassLoader classLoader) {
+        Report report = new Report();
 
-		RuleContext context = new RuleContext();
-		context.setReport( report );
+        RuleContext context = new RuleContext();
+        context.setReport(report);
 
-		PmdTemplate pmdFactory = createPmdTemplate( classLoader );
-		executeRules( pmdFactory, context, javaFiles( Type.MAIN ), PmdConstants.REPOSITORY_KEY );
-		executeRules( pmdFactory, context, javaFiles( Type.TEST ), PmdConstants.TEST_REPOSITORY_KEY );
+        PmdTemplate pmdFactory = createPmdTemplate(classLoader);
+        executeRules(pmdFactory, context, javaFiles(Type.MAIN), PmdConstants.REPOSITORY_KEY);
+        executeRules(pmdFactory, context, javaFiles(Type.TEST), PmdConstants.TEST_REPOSITORY_KEY);
 
-		pmdConfiguration.dumpXmlReport( report );
+        pmdConfiguration.dumpXmlReport(report);
 
-		return report;
-	}
+        return report;
+    }
 
-	private Iterable<InputFile> javaFiles( Type fileType ) {
-		final FilePredicates predicates = fs.predicates();
-		return fs.inputFiles( predicates.and( predicates.hasLanguage( PmdConstants.LANGUAGE_KEY ), predicates.hasType( fileType ) ) );
-	}
+    private Iterable<InputFile> javaFiles(Type fileType) {
+        final FilePredicates predicates = fs.predicates();
+        return fs.inputFiles(
+                predicates.and(
+                        predicates.hasLanguage(PmdConstants.LANGUAGE_KEY),
+                        predicates.hasType(fileType)
+                )
+        );
+    }
 
-	private void executeRules( PmdTemplate pmdFactory, RuleContext ruleContext, Iterable<InputFile> files, String repositoryKey ) {
-		if ( !files.iterator().hasNext() ) {
-			// Nothing to analyze
-			return;
-		}
+    private void executeRules(PmdTemplate pmdFactory, RuleContext ruleContext, Iterable<InputFile> files, String repositoryKey) {
+        if (!files.iterator().hasNext()) {
+            // Nothing to analyze
+            return;
+        }
 
-		RuleSets rulesets = createRuleSets( repositoryKey );
-		if ( rulesets.getAllRules().isEmpty() ) {
-			// No rule
-			return;
-		}
+        RuleSets rulesets = createRuleSets(repositoryKey);
+        if (rulesets.getAllRules().isEmpty()) {
+            // No rule
+            return;
+        }
 
-		rulesets.start( ruleContext );
+        rulesets.start(ruleContext);
 
-		for ( InputFile file : files ) {
-			pmdFactory.process( file, rulesets, ruleContext );
-		}
+        for (InputFile file : files) {
+            pmdFactory.process(file, rulesets, ruleContext);
+        }
 
-		rulesets.end( ruleContext );
-	}
+        rulesets.end(ruleContext);
+    }
 
-	private RuleSets createRuleSets( String repositoryKey ) {
-		String rulesXml = pmdProfileExporter.exportProfile( repositoryKey, rulesProfile );
-		File ruleSetFile = pmdConfiguration.dumpXmlRuleSet( repositoryKey, rulesXml );
-		String ruleSetFilePath = ruleSetFile.getAbsolutePath();
-		RuleSetFactory ruleSetFactory = new RuleSetFactory();
-		try {
-			RuleSet ruleSet = ruleSetFactory.createRuleSet( ruleSetFilePath );
-			return new RuleSets( ruleSet );
-		} catch ( RuleSetNotFoundException e ) {
-			throw new IllegalStateException( e );
-		}
-	}
+    private RuleSets createRuleSets(String repositoryKey) {
+        String rulesXml = pmdProfileExporter.exportProfile(repositoryKey, rulesProfile);
+        File ruleSetFile = pmdConfiguration.dumpXmlRuleSet(repositoryKey, rulesXml);
+        String ruleSetFilePath = ruleSetFile.getAbsolutePath();
+        RuleSetFactory ruleSetFactory = new RuleSetFactory();
+        try {
+            RuleSet ruleSet = ruleSetFactory.createRuleSet(ruleSetFilePath);
+            return new RuleSets(ruleSet);
+        } catch (RuleSetNotFoundException e) {
+            throw new IllegalStateException(e);
+        }
+    }
 
-	PmdTemplate createPmdTemplate( URLClassLoader classLoader ) {
-		return PmdTemplate.create( getSourceVersion(), classLoader, fs.encoding() );
-	}
+    PmdTemplate createPmdTemplate(URLClassLoader classLoader) {
+        return PmdTemplate.create(getSourceVersion(), classLoader, fs.encoding());
+    }
 
-	/**
-	 * @return A classloader for PMD that contains all dependencies of the project that shall be
-	 *         analyzed.
-	 */
-	private URLClassLoader createClassloader() {
-		Collection<File> classpathElements = javaResourceLocator.classpath();
-		List<URL> urls = new ArrayList<>();
-		for ( File file : classpathElements ) {
-			try {
-				urls.add( file.toURI().toURL() );
-			} catch ( MalformedURLException e ) {
-				throw new IllegalStateException( "Failed to create the project classloader. Classpath element is invalid: " + file, e );
-			}
-		}
-		return new URLClassLoader( urls.toArray( new URL[0] ), null );
-	}
+    /**
+     * @return A classloader for PMD that contains all dependencies of the project that shall be analyzed.
+     */
+    private URLClassLoader createClassloader() {
+        Collection<File> classpathElements = javaResourceLocator.classpath();
+        List<URL> urls = new ArrayList<>();
+        for (File file : classpathElements) {
+            try {
+                urls.add(file.toURI().toURL());
+            } catch (MalformedURLException e) {
+                throw new IllegalStateException("Failed to create the project classloader. Classpath element is invalid: " + file, e);
+            }
+        }
+        return new URLClassLoader(urls.toArray(new URL[0]), null);
+    }
 
-	private String getSourceVersion() {
-		return settings.get( PmdConstants.JAVA_SOURCE_VERSION ).orElse( PmdConstants.JAVA_SOURCE_VERSION_DEFAULT_VALUE );
-	}
+    private String getSourceVersion() {
+        return settings.get(PmdConstants.JAVA_SOURCE_VERSION)
+                .orElse(PmdConstants.JAVA_SOURCE_VERSION_DEFAULT_VALUE);
+    }
 
 }
