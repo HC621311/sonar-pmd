@@ -31,7 +31,6 @@ import net.sourceforge.pmd.PMDException;
 import net.sourceforge.pmd.RuleContext;
 import net.sourceforge.pmd.RuleSets;
 import net.sourceforge.pmd.SourceCodeProcessor;
-import net.sourceforge.pmd.lang.java.JavaLanguageHandler;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
 import org.sonar.api.batch.fs.InputFile;
@@ -47,122 +46,122 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 class PmdTemplateTest {
-
-    private final RuleSets rulesets = mock(RuleSets.class);
-    private final RuleContext ruleContext = mock(RuleContext.class);
-    private final PMDConfiguration configuration = mock(PMDConfiguration.class);
-    private final SourceCodeProcessor processor = mock(SourceCodeProcessor.class);
-    private final InputFile inputFile = TestInputFileBuilder.create(
-            "src",
-            "test/resources/org/sonar/plugins/pmd/source.txt"
-    ).build();
-
-    @Test
-    void should_process_input_file() throws Exception {
-        doAnswer((Answer<Void>) invocation -> {
-            final InputStream inputStreamArg = (InputStream) invocation.getArguments()[0];
-            final List<String> inputStreamLines =
-                    new BufferedReader(new InputStreamReader(inputStreamArg))
-                            .lines()
-                            .collect(Collectors.toList());
-            assertThat(inputStreamLines).containsExactly("Example source");
-            return null;
-        }).when(processor).processSourceCode(any(InputStream.class), eq(rulesets), eq(ruleContext));
-
-        new PmdTemplate(configuration, processor).process(inputFile, rulesets, ruleContext);
-
-        verify(ruleContext).setSourceCodeFilename(inputFile.uri().toString());
-        verify(processor).processSourceCode(any(InputStream.class), eq(rulesets), eq(ruleContext));
-    }
-
-    @Test
-    void should_ignore_PMD_error() throws PMDException {
-        doThrow(new PMDException("BUG"))
-                .when(processor).processSourceCode(any(InputStream.class), any(RuleSets.class), any(RuleContext.class));
-
-        new PmdTemplate(configuration, processor).process(inputFile, rulesets, ruleContext);
-    }
-
-    @Test
-    void java12_version() {
-        assertThat(PmdTemplate.languageVersion("1.2").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
-    }
-
-    @Test
-    void java5_version() {
-        assertThat(PmdTemplate.languageVersion("5").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
-    }
-
-    @Test
-    void java6_version() {
-        assertThat(PmdTemplate.languageVersion("6").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
-    }
-
-    @Test
-    void java7_version() {
-        assertThat(PmdTemplate.languageVersion("7").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
-    }
-
-    @Test
-    void java8_version() {
-        assertThat(PmdTemplate.languageVersion("8").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
-    }
-
-    @Test
-    void java9_version() {
-        assertThat(PmdTemplate.languageVersion("9").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
-    }
-
-    @Test
-    void java9_version_with_outdated_versioning_scheme() {
-        assertThat(PmdTemplate.languageVersion("1.9").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
-    }
-
-    @Test
-    void java10_version() {
-        assertThat(PmdTemplate.languageVersion("10").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
-    }
-
-    @Test
-    void java10_version_with_outdated_versioning_scheme() {
-        assertThat(PmdTemplate.languageVersion("1.10").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
-    }
-
-    @Test
-    void java11_version() {
-        assertThat(PmdTemplate.languageVersion("11").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
-    }
-
-    @Test
-    void java11_version_with_outdated_versioning_scheme() {
-        assertThat(PmdTemplate.languageVersion("1.11").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
-    }
-
-    @Test
-    void should_fail_on_invalid_java_version() {
-        final Throwable thrown = catchThrowable(() -> PmdTemplate.create("12.2", mock(ClassLoader.class), StandardCharsets.UTF_8));
-        assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void shouldnt_fail_on_valid_java_version() {
-        PmdTemplate.create("6", mock(ClassLoader.class), StandardCharsets.UTF_8);
-    }
-
-    /**
-     * SONARPLUGINS-3318
-     */
-    @Test
-    void should_set_classloader() {
-        ClassLoader classloader = mock(ClassLoader.class);
-        PmdTemplate pmdTemplate = PmdTemplate.create("6", classloader, StandardCharsets.UTF_8);
-        assertThat(pmdTemplate.configuration().getClassLoader()).isEqualTo(classloader);
-    }
-
-    @Test
-    void should_set_encoding() {
-        PmdTemplate pmdTemplate = PmdTemplate.create("6", mock(ClassLoader.class), StandardCharsets.UTF_16BE);
-        assertThat(pmdTemplate.configuration().getSourceEncoding()).isEqualTo(StandardCharsets.UTF_16BE);
-    }
+//
+//    private final RuleSets rulesets = mock(RuleSets.class);
+//    private final RuleContext ruleContext = mock(RuleContext.class);
+//    private final PMDConfiguration configuration = mock(PMDConfiguration.class);
+//    private final SourceCodeProcessor processor = mock(SourceCodeProcessor.class);
+//    private final InputFile inputFile = TestInputFileBuilder.create(
+//            "src",
+//            "test/resources/org/sonar/plugins/pmd/source.txt"
+//    ).build();
+//
+//    @Test
+//    void should_process_input_file() throws Exception {
+//        doAnswer((Answer<Void>) invocation -> {
+//            final InputStream inputStreamArg = (InputStream) invocation.getArguments()[0];
+//            final List<String> inputStreamLines =
+//                    new BufferedReader(new InputStreamReader(inputStreamArg))
+//                            .lines()
+//                            .collect(Collectors.toList());
+//            assertThat(inputStreamLines).containsExactly("Example source");
+//            return null;
+//        }).when(processor).processSourceCode(any(InputStream.class), eq(rulesets), eq(ruleContext));
+//
+//        new PmdTemplate(configuration, processor).process(inputFile, rulesets, ruleContext);
+//
+//        verify(ruleContext).setSourceCodeFilename(inputFile.uri().toString());
+//        verify(processor).processSourceCode(any(InputStream.class), eq(rulesets), eq(ruleContext));
+//    }
+//
+//    @Test
+//    void should_ignore_PMD_error() throws PMDException {
+//        doThrow(new PMDException("BUG"))
+//                .when(processor).processSourceCode(any(InputStream.class), any(RuleSets.class), any(RuleContext.class));
+//
+//        new PmdTemplate(configuration, processor).process(inputFile, rulesets, ruleContext);
+//    }
+//
+//    @Test
+//    void java12_version() {
+//        assertThat(PmdTemplate.languageVersion("1.2").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
+//    }
+//
+//    @Test
+//    void java5_version() {
+//        assertThat(PmdTemplate.languageVersion("5").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
+//    }
+//
+//    @Test
+//    void java6_version() {
+//        assertThat(PmdTemplate.languageVersion("6").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
+//    }
+//
+//    @Test
+//    void java7_version() {
+//        assertThat(PmdTemplate.languageVersion("7").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
+//    }
+//
+//    @Test
+//    void java8_version() {
+//        assertThat(PmdTemplate.languageVersion("8").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
+//    }
+//
+//    @Test
+//    void java9_version() {
+//        assertThat(PmdTemplate.languageVersion("9").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
+//    }
+//
+//    @Test
+//    void java9_version_with_outdated_versioning_scheme() {
+//        assertThat(PmdTemplate.languageVersion("1.9").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
+//    }
+//
+//    @Test
+//    void java10_version() {
+//        assertThat(PmdTemplate.languageVersion("10").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
+//    }
+//
+//    @Test
+//    void java10_version_with_outdated_versioning_scheme() {
+//        assertThat(PmdTemplate.languageVersion("1.10").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
+//    }
+//
+//    @Test
+//    void java11_version() {
+//        assertThat(PmdTemplate.languageVersion("11").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
+//    }
+//
+//    @Test
+//    void java11_version_with_outdated_versioning_scheme() {
+//        assertThat(PmdTemplate.languageVersion("1.11").getLanguageVersionHandler()).isInstanceOf(JavaLanguageHandler.class);
+//    }
+//
+//    @Test
+//    void should_fail_on_invalid_java_version() {
+//        final Throwable thrown = catchThrowable(() -> PmdTemplate.create("12.2", mock(ClassLoader.class), StandardCharsets.UTF_8));
+//        assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
+//    }
+//
+//    @Test
+//    void shouldnt_fail_on_valid_java_version() {
+//        PmdTemplate.create("6", mock(ClassLoader.class), StandardCharsets.UTF_8);
+//    }
+//
+//    /**
+//     * SONARPLUGINS-3318
+//     */
+//    @Test
+//    void should_set_classloader() {
+//        ClassLoader classloader = mock(ClassLoader.class);
+//        PmdTemplate pmdTemplate = PmdTemplate.create("6", classloader, StandardCharsets.UTF_8);
+//        assertThat(pmdTemplate.configuration().getClassLoader()).isEqualTo(classloader);
+//    }
+//
+//    @Test
+//    void should_set_encoding() {
+//        PmdTemplate pmdTemplate = PmdTemplate.create("6", mock(ClassLoader.class), StandardCharsets.UTF_16BE);
+//        assertThat(pmdTemplate.configuration().getSourceEncoding()).isEqualTo(StandardCharsets.UTF_16BE);
+//    }
 
 }

@@ -62,7 +62,7 @@ public final class PmdRulesDefinition implements RulesDefinition {
                 .createRepository(PmdConstants.REPOSITORY_KEY, PmdConstants.LANGUAGE_KEY)
                 .setName(PmdConstants.REPOSITORY_NAME);
 
-        extractRulesData(repository, "/org/sonar/plugins/pmd/rules.xml", "/org/sonar/l10n/pmd/rules/pmd");
+        extractRulesData(repository, "/org/sonar/plugins/pmd/rules-p3c.xml", "/org/sonar/l10n/pmd/rules/pmd-p3c");
 
         repository.done();
     }
@@ -74,10 +74,13 @@ public final class PmdRulesDefinition implements RulesDefinition {
         } catch (IOException e) {
             throw new IllegalArgumentException("Could not read names from properties", e);
         }
+        LOGGER.info("loadNames:{}", repository.key());
+
         for (NewRule rule : repository.rules()) {
             String baseKey = "rule." + repository.key() + "." + rule.key();
             String nameKey = baseKey + ".name";
             String ruleName = properties.getProperty(nameKey);
+            LOGGER.info("loadNames:{},baseKey:{},ruleName:{}", repository.key(),nameKey,ruleName);
             if (ruleName != null) {
                 rule.setName(ruleName);
             }

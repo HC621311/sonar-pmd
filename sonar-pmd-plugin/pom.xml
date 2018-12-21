@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
@@ -11,6 +12,7 @@
   <artifactId>sonar-pmd-plugin</artifactId>
   <packaging>sonar-plugin</packaging>
 
+  <version>3.1.3.01</version>
   <name>SonarQube PMD Plugin</name>
   <description>Sonar-PMD is a plugin that provides coding rules from PMD.</description>
   <inceptionYear>2012</inceptionYear>
@@ -92,6 +94,11 @@
       <artifactId>jdom</artifactId>
       <version>1.0</version>
     </dependency>
+    <dependency>
+      <groupId>com.alibaba.p3c</groupId>
+      <artifactId>p3c-pmd</artifactId>
+      <version>1.3.4</version>
+    </dependency>
 
 
   </dependencies>
@@ -102,8 +109,8 @@
         <groupId>org.sonarsource.sonar-packaging-maven-plugin</groupId>
         <artifactId>sonar-packaging-maven-plugin</artifactId>
         <configuration>
-          <pluginKey>pmd</pluginKey>
-          <pluginName>PMD</pluginName>
+          <pluginKey>pmdp3c</pluginKey>
+          <pluginName>PMDP3C</pluginName>
           <pluginClass>org.sonar.plugins.pmd.PmdPlugin</pluginClass>
           <pluginDescription>Analyze Java code with PMD.</pluginDescription>
         </configuration>
