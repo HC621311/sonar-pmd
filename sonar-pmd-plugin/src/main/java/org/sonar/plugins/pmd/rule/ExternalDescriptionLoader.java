@@ -57,7 +57,10 @@ public class ExternalDescriptionLoader {
     void addHtmlDescription(RulesDefinition.NewRule rule, URL resource) {
         final StringBuilder builder = new StringBuilder();
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.openStream(), StandardCharsets.UTF_8))) {
-            reader.lines().forEach(builder::append);
+            //			reader.lines().forEach( builder::append );
+            reader.lines().forEach( content -> {
+                builder.append( content ).append( "\n" );
+            } );
             rule.setHtmlDescription(builder.toString());
         } catch (IOException e) {
             throw new IllegalStateException("Failed to read: " + resource, e);
